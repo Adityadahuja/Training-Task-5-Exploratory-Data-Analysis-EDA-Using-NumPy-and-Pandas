@@ -1,6 +1,6 @@
 # 📊 Task 5 – Exploratory Data Analysis (EDA) Using NumPy and Pandas
 
-A hands-on EDA notebook analyzing the **Netflix Titles dataset** using NumPy and Pandas — covering data loading, cleaning, statistical analysis, filtering, and grouping.
+A comprehensive EDA notebook on the **Netflix Titles dataset** — covering statistical analysis, univariate & bivariate visualizations, and outlier detection using the IQR method.
 
 ---
 
@@ -9,10 +9,10 @@ A hands-on EDA notebook analyzing the **Netflix Titles dataset** using NumPy and
 - [Overview](#overview)
 - [Dataset](#dataset)
 - [Libraries Used](#libraries-used)
-- [EDA Steps Performed](#eda-steps-performed)
-- [NumPy Operations](#numpy-operations)
-- [Pandas Operations](#pandas-operations)
-- [Key Findings](#key-findings)
+- [EDA Workflow](#eda-workflow)
+- [Visualizations](#visualizations)
+- [Outlier Detection](#outlier-detection)
+- [Key Insights](#key-insights)
 - [Prerequisites](#prerequisites)
 - [How to Run](#how-to-run)
 
@@ -20,7 +20,7 @@ A hands-on EDA notebook analyzing the **Netflix Titles dataset** using NumPy and
 
 ## Overview
 
-This notebook is **Task 5** of a Python Data Analysis series. It introduces Exploratory Data Analysis (EDA) — the essential first step before any machine learning or data science project. The notebook uses the real-world **Netflix Titles dataset** from Kaggle to demonstrate practical data exploration techniques.
+This notebook performs end-to-end Exploratory Data Analysis (EDA) on the real-world **Netflix Titles dataset** from Kaggle. It goes beyond basic data inspection to include statistical analysis with NumPy, multiple chart types with Matplotlib and Seaborn, and outlier detection using the IQR method.
 
 ---
 
@@ -31,7 +31,7 @@ This notebook is **Task 5** of a Python Data Analysis series. It introduces Expl
 | **Name** | Netflix Titles |
 | **Source** | [Kaggle – Netflix Movies and TV Shows](https://www.kaggle.com/datasets/shivamb/netflix-shows) |
 | **File** | `netflix_titles.csv` |
-| **Content** | Movies and TV shows available on Netflix |
+| **Content** | Movies and TV Shows available on Netflix globally |
 
 ### Key Columns
 
@@ -42,72 +42,82 @@ This notebook is **Task 5** of a Python Data Analysis series. It introduces Expl
 | `director` | Director name |
 | `country` | Country of production |
 | `release_year` | Year of release |
-| `rating` | Content rating (PG, R, etc.) |
-| `duration` | Duration in minutes or seasons |
+| `rating` | Content rating (PG, R, TV-MA, etc.) |
+| `duration` | Runtime (minutes for movies, seasons for TV shows) |
 
 ---
 
 ## Libraries Used
 
 ```python
-import numpy as np   # Numerical operations, array stats
-import pandas as pd  # Data loading, cleaning, analysis
+import pandas as pd          # Data loading, cleaning, analysis
+import numpy as np           # Numerical stats on arrays
+import matplotlib.pyplot as plt  # Plotting charts
+import seaborn as sns        # Statistical visualizations
 ```
 
 ---
 
-## EDA Steps Performed
+## EDA Workflow
 
 | Step | Method | Purpose |
 |------|--------|---------|
-| Load Data | `pd.read_csv()` | Import the CSV dataset |
-| Preview Data | `df.head()`, `df.tail()` | Inspect first/last rows |
-| Dataset Shape | `df.shape` | Get rows × columns count |
-| Column Names | `df.columns` | List all features |
-| Data Types | `df.info()` | Check dtypes and null counts |
-| Missing Values | `df.isnull().sum()` | Identify null entries per column |
-| Statistical Summary | `df.describe(include="all")` | Min, max, mean, frequency stats |
-| Correlation Matrix | `df.corr(numeric_only=True)` | Relationship between numeric columns |
+| Load Data | `pd.read_csv()` | Import the dataset |
+| Preview | `df.head()`, `df.tail()`, `df.sample(5)` | Inspect rows |
+| Shape & Columns | `df.shape`, `df.columns` | Dataset dimensions |
+| Data Types | `df.info()` | Dtypes and null counts |
+| Missing Values | `df.isnull().sum()` | Null entries per column |
+| Statistical Summary | `df.describe()` | Min, max, mean, std |
+| NumPy Stats | `np.mean()`, `np.median()`, `np.std()` | Deeper numeric analysis |
+| Skewness | `df['release_year'].skew()` | Distribution symmetry check |
+| Filtering | Boolean indexing | Separate Movies vs TV Shows |
+| Grouping | `df.groupby()` | Aggregate stats by category |
+| Correlation | `df.corr(numeric_only=True)` | Numeric feature relationships |
 
 ---
 
-## NumPy Operations
+## Visualizations
 
-Applied on the `release_year` column converted to a NumPy array:
+| Chart | Library | Insight |
+|-------|---------|---------|
+| Pie Chart | Matplotlib | Movies vs TV Shows distribution |
+| Histogram | Matplotlib | Release year distribution |
+| Bar Chart | Matplotlib | Top content ratings |
+| Bar Chart | Matplotlib | Top 10 producing countries |
+| Boxplot | Seaborn | Release year spread and outliers |
+| Count Plot | Seaborn | Content count by type |
+| Boxplot (bivariate) | Seaborn | Release year by content type |
+| Count Plot (hue) | Seaborn | Ratings breakdown by content type |
+
+---
+
+## Outlier Detection
+
+Outliers in `release_year` are identified using the **IQR Method**:
 
 ```python
-years = df["release_year"].to_numpy()
+Q1 = df['release_year'].quantile(0.25)
+Q3 = df['release_year'].quantile(0.75)
+IQR = Q3 - Q1
 
-np.mean(years)   # Average release year
-np.max(years)    # Most recent release year
-np.min(years)    # Oldest release year
-np.std(years)    # Spread of release years
+lower_limit = Q1 - (1.5 * IQR)
+upper_limit = Q3 + (1.5 * IQR)
+
+outliers = df[
+    (df['release_year'] < lower_limit) |
+    (df['release_year'] > upper_limit)
+]
 ```
 
 ---
 
-## Pandas Operations
+## Key Insights
 
-```python
-# Filter by content type
-movies   = df[df["type"] == "Movie"]
-tv_shows = df[df["type"] == "TV Show"]
-
-# Count content types
-df["type"].value_counts()
-
-# Group by type and find average release year
-df.groupby("type")["release_year"].mean()
-```
-
----
-
-## Key Findings
-
-- The dataset contains both **Movies and TV Shows** — Movies make up the majority of Netflix content.
-- Missing values were found in columns like `director`, `cast`, and `country`.
-- NumPy stats on `release_year` reveal the recency of Netflix's content library.
-- Grouping by `type` shows that Movies and TV Shows have different average release years.
+- **Movies dominate** Netflix's catalogue compared to TV Shows.
+- **Release years are left-skewed** — most content is recent, with a few older titles pulling the distribution.
+- **TV-MA and TV-14** are the most common content ratings.
+- **United States** is the top content-producing country by a large margin.
+- Bivariate analysis shows **TV Shows tend to have a slightly higher average release year** than Movies.
 
 ---
 
@@ -118,17 +128,17 @@ df.groupby("type")["release_year"].mean()
 - Required libraries:
 
 ```bash
-pip install numpy pandas
+pip install numpy pandas matplotlib seaborn
 ```
 
-- Download `netflix_titles.csv` from [Kaggle](https://www.kaggle.com/datasets/shivamb/netflix-shows) and place it in the same directory as the notebook.
+- Download `netflix_titles.csv` from [Kaggle](https://www.kaggle.com/datasets/shivamb/netflix-shows) and place it in the same folder as the notebook.
 
 ---
 
 ## How to Run
 
 ```bash
-jupyter notebook "Task_5___Exploratory_Data_Analysis__EDA__Using_NumPy_and_Pandas.ipynb"
+jupyter notebook "Task_5___EDA_Using_NumPy_and_Pandas.ipynb"
 ```
 
 Or open in [Google Colab](https://colab.research.google.com/) by uploading both the `.ipynb` file and `netflix_titles.csv`.
@@ -137,4 +147,4 @@ Or open in [Google Colab](https://colab.research.google.com/) by uploading both 
 
 ## Author
 
-**Aditya** — Python Data Analysis Series, Task 5
+**Aditya** — Python Data Analysis Series, Task 5 (Revised)
